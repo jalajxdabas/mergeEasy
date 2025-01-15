@@ -1,0 +1,32 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Merger</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>File Merger</h1>
+        <div id="uploadArea" class="upload-area">
+            <p>Drop files here or click to select</p>
+            <p style="color: #666; font-size: 0.9rem;">Supported formats: CSV, JSON, XLSX, XLS</p>
+            <input type="file" id="fileInput" multiple accept=".csv,.json,.xlsx,.xls" style="display: none">
+        </div>
+
+        <ul id="fileList" class="file-list"></ul>
+
+        <div class="loading" id="loading">
+            <p>Merging files...</p>
+        </div>
+
+        <button id="mergeBtn" class="merge-btn" disabled>Merge Files</button>
+
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script src="/js/script.js"></script>
+</body>
+</html>
+ -->

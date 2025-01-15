@@ -1,0 +1,30 @@
+<%- layout('layouts/boilerplate') %>
+<div class="contain-body">
+    <div class="head">
+        <h3>Upload files, Merge them easily!</h3>
+        <h5>(merging files made easy, upload any file with format JSON, CSV or excel)</h5>
+    </div>
+
+    <div class="container">
+        <div class="head">
+            <h3>Upload Files</h3>
+        </div>
+        <label for="upload-area">Choose Files:</label>
+        <div id="uploadArea" class="upload-area">
+            <p>Drop files here or click to select</p>
+            <p style="color: #666; font-size: 0.9rem;">Supported formats: CSV, JSON, XLSX, XLS</p>
+            <input type="file" id="fileInput" multiple accept=".csv,.json,.xlsx,.xls" style="display: none">
+        </div>
+
+        <ul id="fileList" class="file-list"></ul>
+
+        <div class="loading" id="loading">
+            <p>Merging files...</p>
+        </div>
+
+        <button id="mergeBtn" class="merge-btn" disabled>Merge Files</button>
+
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+</div>
+

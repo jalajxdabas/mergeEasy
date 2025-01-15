@@ -1,0 +1,19 @@
+{
+    "name": "file-merger",
+    "version": "1.0.0",
+    "description": "File merger application",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "nodemon app.js"
+    },
+    "dependencies": {
+        "ejs": "^3.1.10",
+        "ejs-mate": "^4.0.0",
+        "express": "^4.21.2",
+        "multer": "^1.4.5-lts.1"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.22"
+    }
+}
