@@ -1,0 +1,45 @@
+{
+    "products": [
+      {
+        "id": 1,
+        "name": "Gaming Mouse",
+        "category": "Computer Accessories",
+        "price": 49.99,
+        "stock": 65,
+        "supplier": "TechGear Ltd"
+      },
+      {
+        "id": 2,
+        "name": "Water Bottle",
+        "category": "Sports Equipment",
+        "price": 24.99,
+        "stock": 200,
+        "supplier": "FitLife Corp"
+      },
+      {
+        "id": 3,
+        "name": "Air Purifier",
+        "category": "Home Appliances",
+        "price": 149.99,
+        "stock": 30,
+        "supplier": "CleanAir Systems"
+      },
+      {
+        "id": 4,
+        "name": "Notebook Set",
+        "category": "Stationery",
+        "price": 15.99,
+        "stock": 350,
+        "supplier": "PaperWorks Inc"
+      },
+      {
+        "id": 5,
+        "name": "Wall Clock",
+        "category": "Home Decor",
+        "price": 39.99,
+        "stock": 85,
+        "supplier": "TimeKeepers Co"
+      }
+    ]
+  }
+  
