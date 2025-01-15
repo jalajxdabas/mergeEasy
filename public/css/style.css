@@ -283,3 +283,21 @@ nav a:hover {
 .file-list::-webkit-scrollbar-thumb:hover {
     background: #666;
 }
+
+/* download button  */
+#downloadButton {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+#downloadButton:hover {
+    background-color: rgb(159, 2, 2);
+    opacity: 1;
+    transition-delay: 0.1s;
+}

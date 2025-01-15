@@ -123,6 +123,16 @@ app.post('/api/merge', upload.array('files'), async (req, res) => {
     }
 });
 
+//downloading the file 
+app.get('/download', (req, res) => {
+    const filePath = path.join(__dirname, 'merged_data.csv');
+    res.download(filePath, 'merged.csv', (err) => {
+        if (err) {
+            console.error('Error during file download:', err);
+        }
+    });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err);
@@ -137,4 +147,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-
