@@ -94,16 +94,16 @@ mergeBtn.addEventListener('click', async () => {
         if (response.ok) {
             result.className = 'result success';
             result.innerHTML = `
-                <h3>Merging files!</h3>
+                <h5>Columns mapped successfully!</h5>
             `;
             
-            //downloadButton.style.display = 'block';
+            
 
             // If redirect URL is provided, redirect to columns page
             if (data.redirectUrl) {
                 setTimeout(() => {
                     window.location.href = data.redirectUrl;
-                }, 2000);  // Redirect after a brief delay to allow user to see the result
+                }, 2000);  
             }
 
             // Reset the files list
@@ -116,7 +116,6 @@ mergeBtn.addEventListener('click', async () => {
         result.style.display = 'block';
         result.className = 'result error';
         result.textContent = `Error: ${error.message}`;
-        downloadButton.style.display = 'none';  // Hide download button on error
     } finally {
         loading.classList.remove('active');
         mergeBtn.disabled = files.length === 0;
@@ -131,7 +130,6 @@ async function saveChanges() {
     const tableRows = document.querySelectorAll('#columns-table tbody tr');
     const updatedMatches = {};
 
-    // Collect updated values from the table
     tableRows.forEach(row => {
         const keyCell = row.querySelector('.key').textContent.trim();
         const valueInput = row.querySelector('.value input').value.trim();
@@ -169,7 +167,7 @@ async function submitUpdatedColumnMatches() {
     const tableRows = document.querySelectorAll('#columns-table tbody tr');
     const updatedMatches = {};
 
-    // Collect updated values from the table
+    
     tableRows.forEach(row => {
         const keyCell = row.querySelector('.key').textContent.trim();
         const valueInput = row.querySelector('.value input').value.trim();
@@ -196,17 +194,17 @@ async function submitUpdatedColumnMatches() {
             alert('Column matches submitted successfully!');
             console.log('Updated column matches processed on server:', result);
 
-            // Check if the response contains a download URL
+            
             const downloadUrl = result.downloadUrl;
 
             if (downloadUrl) {
-                // Create an anchor element to trigger the download
+            
                 const link = document.createElement('a');
                 link.href = downloadUrl;
-                link.download = 'merged_output.csv'; // The filename for download
+                link.download = 'merged_output.csv'; 
                 document.body.appendChild(link);
-                link.click();  // Programmatically click the link to trigger the download
-                document.body.removeChild(link);  // Clean up by removing the link
+                link.click();  
+                document.body.removeChild(link);  
             } else {
                 alert('Error: No download URL provided');
             }
@@ -217,3 +215,34 @@ async function submitUpdatedColumnMatches() {
         alert('Error submitting column matches: ' + error.message);
     }
 }
+
+let draggedElement = null;
+
+function onDragStart(event) {
+    draggedElement = event.target;
+    event.dataTransfer.setData("text/plain", draggedElement.innerText);
+    event.target.style.opacity = "0.5";
+}
+
+function onDragOver(event) {
+    event.preventDefault(); 
+}
+
+
+function onDrop(event) {
+    event.preventDefault();
+    if (draggedElement && event.target.classList.contains("key")) {
+        const draggedContent = draggedElement.innerText;
+        draggedElement.innerText = event.target.innerText;
+        event.target.innerText = draggedContent;
+    }
+    draggedElement.style.opacity = "1";
+    draggedElement = null;
+}
+
+document.addEventListener("dragend", (event) => {
+    if (draggedElement) {
+        draggedElement.style.opacity = "1";
+        draggedElement = null;
+    }
+});

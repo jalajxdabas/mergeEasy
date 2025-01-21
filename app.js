@@ -77,13 +77,6 @@ app.post('/api/merge', upload.array('files'), async (req, res) => {
         });
 
         pythonProcess.on('close', (code) => {
-            // filePaths.forEach(filePath => {
-            //     try {
-            //         fs.unlinkSync(filePath);
-            //     } catch (err) {
-            //         console.error(`Error deleting file ${filePath}:`, err);
-            //     }
-            // });
 
             if (code !== 0) {
                 console.error('Python script error:', pythonError);
@@ -136,11 +129,9 @@ app.post('/api/merge', upload.array('files'), async (req, res) => {
 });
 
 
-
-// Declare a global variable to store column matches
 let columnMatches = {};
 
-// Route to update column matches
+
 app.post('/api/update-columns', (req, res) => {
     try {
         const updatedMatches = req.body;
@@ -153,13 +144,10 @@ app.post('/api/update-columns', (req, res) => {
             });
         }
 
-        // Update the global columnMatches object
         columnMatches = { ...columnMatches, ...updatedMatches };
 
-        // Log the updated object
         console.log('Updated columnMatches:', columnMatches);
 
-        // Send success response
         res.json({
             success: true,
             message: 'Column matches updated successfully',
@@ -176,8 +164,6 @@ app.post('/api/update-columns', (req, res) => {
 });
 
 
-
-// Route to render the table
 app.get('/columns', (req, res) => {
     if (!columnMatches || Object.keys(columnMatches).length === 0) {
         return res.status(500).send('No column matches available');
@@ -185,7 +171,6 @@ app.get('/columns', (req, res) => {
     res.render('columns', { columnMatches });
 });
 
-// Declare a global variable to store column matches
 let globalColumnMatches = {};
 
 app.post('/api/submit-columns', (req, res) => {
@@ -230,14 +215,13 @@ app.post('/api/submit-columns', (req, res) => {
                 });
             }
 
-            // Path to the merged file
             const mergedFilePath = path.join(__dirname, 'merged_output.csv');
 
             res.json({
                 success: true,
                 message: 'Column matches processed successfully by Python script',
                 pythonOutput: pythonOutput,
-                downloadUrl: `/download`, // Provide the download URL
+                downloadUrl: `/download`, 
             });
         });
     } catch (err) {
@@ -262,19 +246,11 @@ app.get('/download', (req, res) => {
                 error: err.message,
             });
         } else {
-            // After the merged file has been downloaded, delete it
-            try {
-                fs.unlinkSync(mergedFilePath);
-                console.log(`File ${mergedFilePath} has been deleted after download.`);
-            } catch (deleteErr) {
-                console.error('Error deleting merged file:', deleteErr);
-            }
-
-            // Now, delete the uploaded files
+            
             uploadedFiles.forEach(filePath => {
                 try {
                     fs.unlinkSync(filePath);
-                    console.log(`Uploaded file ${filePath} has been deleted.`);
+                    // console.log(`Uploaded file ${filePath} has been deleted.`);
                 } catch (deleteErr) {
                     console.error(`Error deleting uploaded file ${filePath}:`, deleteErr);
                 }
