@@ -6,12 +6,11 @@ const loading = document.getElementById('loading');
 const result = document.getElementById('result');
 const downloadButton = document.getElementById('downloadButton');
 
-// Initially hide the download button
 downloadButton.style.display = 'none';
 
 let files = [];
 
-// Handle drag and drop
+// drag and drop
 uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
     uploadArea.style.borderColor = '#4CAF50';
@@ -27,7 +26,7 @@ uploadArea.addEventListener('drop', (e) => {
     handleFiles(e.dataTransfer.files);
 });
 
-// Handle click to upload
+// click to upload
 uploadArea.addEventListener('click', () => {
     fileInput.click();
 });
@@ -45,7 +44,7 @@ function handleFiles(newFiles) {
     files = [...files, ...validFiles];
     updateFileList();
     mergeBtn.disabled = files.length === 0;
-    // Hide download button when new files are added
+    
     downloadButton.style.display = 'none';
 }
 
@@ -66,7 +65,7 @@ function removeFile(index) {
     files.splice(index, 1);
     updateFileList();
     mergeBtn.disabled = files.length === 0;
-    // Hide download button when files are removed
+    
     downloadButton.style.display = 'none';
 }
 
@@ -81,7 +80,7 @@ mergeBtn.addEventListener('click', async () => {
     loading.classList.add('active');
     mergeBtn.disabled = true;
     result.style.display = 'none';
-    downloadButton.style.display = 'none';  // Hide download button during merge
+    downloadButton.style.display = 'none';  
 
     try {
         const response = await fetch('/api/merge', {
@@ -95,15 +94,19 @@ mergeBtn.addEventListener('click', async () => {
         if (response.ok) {
             result.className = 'result success';
             result.innerHTML = `
-                <h3>Files merged successfully!</h3>
-                <p>Total rows: ${data.total_rows}</p>
-                <p>Duplicates removed: ${data.duplicates_removed}</p>
-                <p>Output file: ${data.filePath}</p>
-                <p>Columns: ${data.columns.join(', ')}</p>
+                <h3>Merging files!</h3>
             `;
-            // Show download button after successful merge
-            downloadButton.style.display = 'block';
-            // Clear files after successful merge
+            
+            //downloadButton.style.display = 'block';
+
+            // If redirect URL is provided, redirect to columns page
+            if (data.redirectUrl) {
+                setTimeout(() => {
+                    window.location.href = data.redirectUrl;
+                }, 2000);  // Redirect after a brief delay to allow user to see the result
+            }
+
+            // Reset the files list
             files = [];
             updateFileList();
         } else {
@@ -120,6 +123,97 @@ mergeBtn.addEventListener('click', async () => {
     }
 });
 
+
 downloadButton.addEventListener('click', () => {
     window.location.href = '/download';
 });
+async function saveChanges() {
+    const tableRows = document.querySelectorAll('#columns-table tbody tr');
+    const updatedMatches = {};
+
+    // Collect updated values from the table
+    tableRows.forEach(row => {
+        const keyCell = row.querySelector('.key').textContent.trim();
+        const valueInput = row.querySelector('.value input').value.trim();
+        updatedMatches[keyCell] = valueInput;
+    });
+
+    console.log('Updated matches to send:', updatedMatches); // Debugging log
+
+    try {
+        const response = await fetch('/api/update-columns', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedMatches),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text(); // Capture non-JSON response
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+        }
+
+        const result = await response.json();
+        if (result.success) {
+            alert('Changes saved successfully!');
+            console.log('Updated column matches on server:', result.updatedMatches); // Log updated matches
+        } else {
+            alert('Failed to save changes: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error saving changes: ' + error.message);
+    }
+}
+async function submitUpdatedColumnMatches() {
+    const tableRows = document.querySelectorAll('#columns-table tbody tr');
+    const updatedMatches = {};
+
+    // Collect updated values from the table
+    tableRows.forEach(row => {
+        const keyCell = row.querySelector('.key').textContent.trim();
+        const valueInput = row.querySelector('.value input').value.trim();
+        updatedMatches[keyCell] = valueInput;
+    });
+
+    const singleObjectToSend = {
+        columnMatches: updatedMatches, // Column matches from the user
+    };
+
+    console.log('Submitting column matches:', singleObjectToSend);
+
+    try {
+        const response = await fetch('/api/submit-columns', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(singleObjectToSend),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert('Column matches submitted successfully!');
+            console.log('Updated column matches processed on server:', result);
+
+            // Check if the response contains a download URL
+            const downloadUrl = result.downloadUrl;
+
+            if (downloadUrl) {
+                // Create an anchor element to trigger the download
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = 'merged_output.csv'; // The filename for download
+                document.body.appendChild(link);
+                link.click();  // Programmatically click the link to trigger the download
+                document.body.removeChild(link);  // Clean up by removing the link
+            } else {
+                alert('Error: No download URL provided');
+            }
+        } else {
+            alert('Failed to submit column matches: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error submitting column matches: ' + error.message);
+    }
+}

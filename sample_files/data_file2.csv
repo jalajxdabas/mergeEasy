@@ -1,0 +1,6 @@
+product_number,product_title,category,unit_cost,units_available,supplier_name
+301,Microwave,Appliances,89.95,40,ApplianceWorld
+302,Kettlebell,Fitness,25.99,200,FitLife
+303,Bookshelf,Furniture,74.5,25,HomeDecor
+304,Tablet,Electronics,299.99,60,GadgetHub
+305,Lawn Mower,Gardening Equipment,249.99,15,OutdoorSupplies

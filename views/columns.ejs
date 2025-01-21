@@ -1,0 +1,39 @@
+<%- layout('layouts/boilerplate') %>
+
+<h1>Column Matches: </h1>
+<div class="table-body">
+    <div class="table-container">
+        
+
+        <table id="columns-table" border="1">
+            <thead>
+                <tr>
+                    <th>Original Column</th>
+                    <th>Mapped Column</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (Object.keys(columnMatches).length === 0) { %>
+                    <tr>
+                        <td colspan="2">No column matches available</td>
+                    </tr>
+                <% } else { %>
+                    <% for (const [key, value] of Object.entries(columnMatches)) { %>
+                        <tr>
+                            <td class="key"><%= key %></td>
+                            <td class="value"><input type="text" value="<%= value %>" /></td>
+                        </tr>
+                    <% } %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <button onclick="saveChanges()">Confirm the changes</button>
+        <button onclick="submitUpdatedColumnMatches()">Download File</button>        
+    </div>
+</div>
+
+
+
+

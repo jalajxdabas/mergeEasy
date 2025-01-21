@@ -301,3 +301,75 @@ nav a:hover {
     opacity: 1;
     transition-delay: 0.1s;
 }
+
+.table-body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.table-container {
+    width: 80%;
+    max-width: 800px;
+    background-color: #fff;  /* White background */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  /* Soft shadow */
+    padding: 20px;
+    text-align: center;
+}
+
+/* Heading style */
+h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f1f1f1;
+}
+
+tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Button styling */
+button {
+    padding: 8px 12px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#addColumnBtn {
+    margin-top: 20px;
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Styling for draggable columns */
+.draggable-column {
+    cursor: move;
+}
+
+.draggable-row {
+    transition: transform 0.3s ease;
+}

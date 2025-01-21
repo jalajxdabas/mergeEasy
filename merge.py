@@ -1,104 +1,153 @@
-# merge.py
 import pandas as pd
 import os
 import sys
 import json
 import traceback
+import requests
+
+# Set your Hugging Face API token
+HUGGINGFACE_API_TOKEN = "YOUR TOKEN"
 
 def debug_print(message):
-    """Print debug information that will be captured in Node.js logs"""
+    """Print debug information to stderr."""
     print(f"DEBUG: {message}", file=sys.stderr, flush=True)
 
-def read_json(file_path):
-    """Extract data from JSON file"""
-    debug_print(f"Reading JSON file: {file_path}")
+def read_file(file_path):
+    """Read a file into a DataFrame."""
     try:
-        with open(file_path) as f:
-            data = json.load(f)
+        extension = os.path.splitext(file_path)[1].lower()
+        if extension == '.csv':
+            return pd.read_csv(file_path)
+        elif extension in ['.xlsx', '.xls']:
+            return pd.read_excel(file_path)
+        elif extension == '.json':
+            with open(file_path, 'r') as f:
+                data = json.load(f)
             if isinstance(data, dict):
                 for value in data.values():
                     if isinstance(value, list):
                         return pd.DataFrame(value)
             return pd.DataFrame(data if isinstance(data, list) else [data])
-    except Exception as e:
-        debug_print(f"Error reading JSON file {file_path}: {str(e)}")
-        raise
-
-def read_file(file_path):
-    debug_print(f"Attempting to read file: {file_path}")
-    try:
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File does not exist: {file_path}")
-
-        extension = os.path.splitext(file_path)[1].lower()
-        debug_print(f"File extension: {extension}")
-
-        if extension == '.csv':
-            df = pd.read_csv(file_path)
-        elif extension == '.json':
-            df = read_json(file_path)
-        elif extension in ['.xlsx', '.xls']:
-            df = pd.read_excel(file_path)
         else:
             raise ValueError(f"Unsupported file format: {extension}")
-
-        debug_print(f"Successfully read file {file_path} with shape: {df.shape}")
-        return df
     except Exception as e:
         debug_print(f"Error reading {file_path}: {str(e)}")
-        debug_print(f"Traceback: {traceback.format_exc()}")
         raise
 
-def merge_files(file_paths, output_path='merged_data.csv'):
-    try:
-        debug_print(f"Starting merge process with files: {file_paths}")
-        debug_print(f"Output path: {output_path}")
-
-        if not file_paths:
-            raise ValueError("No files provided for merging")
-
-        # Verify input paths
-        file_paths = [os.path.abspath(path) for path in file_paths]
-        for file_path in file_paths:
-            if not os.path.exists(file_path):
-                raise FileNotFoundError(f"File not found: {file_path}")
-            debug_print(f"Verified file exists: {file_path}")
-
-        dataframes = []
-        for file_path in file_paths:
-            df = read_file(file_path)
-            if df is not None and not df.empty:
-                dataframes.append(df)
-                debug_print(f"Added dataframe from {file_path} with shape {df.shape}")
-            else:
-                debug_print(f"Skipping invalid or empty file: {file_path}")
-
-        if not dataframes:
-            raise ValueError('No valid files to merge')
-
-        merged_df = pd.concat(dataframes, ignore_index=True).drop_duplicates()
-        debug_print(f"Final merged shape: {merged_df.shape}")
-        
-        # Ensure output directory exists
-        os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
-        
-        merged_df.to_csv(output_path, index=False)
-        debug_print(f"Successfully saved merged file to: {output_path}")
-
-        result = {
-            'success': True,
-            'message': 'Files merged successfully',
-            'total_rows': len(merged_df),
-            'duplicates_removed': sum(len(df) for df in dataframes) - len(merged_df),
-            'columns': list(merged_df.columns),
-            'filePath': output_path
+def call_huggingface_api(source_column, target_column):
+    """Call Hugging Face API to compare two column names."""
+    url = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
+    headers = {"Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}"}
+    payload = {
+        "inputs": {
+            "source_sentence": source_column,
+            "sentences": [target_column]
         }
-        print(json.dumps(result))  # Print to stdout for Node.js to capture
-        return result
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        similarity_scores = response.json()
+        return similarity_scores[0]  # Return the first similarity score
+    except requests.exceptions.RequestException as e:
+        debug_print(f"Hugging Face API error: {str(e)}")
+        return 0  # Return 0 if the API call fails
+
+def match_columns(file1_columns, file2_columns):
+    """Match columns between two files."""
+    matches = {}
+    for col1 in file1_columns:
+        best_match = None
+        best_score = 0
+        for col2 in file2_columns:
+            score = call_huggingface_api(col1, col2)
+            if score > best_score:
+                best_match = col2
+                best_score = score
+        if best_match:
+            matches[col1] = best_match
+    return matches
+
+def merge_files(file_paths):
+    """Only match columns and print the final mapping."""
+    try:
+        if len(file_paths) < 2:
+            raise ValueError("At least two files are required for column matching")
+
+        # Read all files into DataFrames
+        dataframes = [read_file(file) for file in file_paths]
+        column_sets = [list(df.columns) for df in dataframes]
+
+        # Match columns between files (cross-file matching only)
+        all_matches = {}
+        for i, columns1 in enumerate(column_sets):
+            for j, columns2 in enumerate(column_sets):
+                if i < j:  # Only compare different files
+                    matches = match_columns(columns1, columns2)
+                    all_matches.update(matches)
+
+        # Print the final column matches and exit
+        debug_print(f"Final column matches: {all_matches}")
+        print(json.dumps({
+            'success': True,
+            'message': 'Column matching completed successfully',
+            'column_matches': all_matches
+        }))
+        sys.exit(0)
 
     except Exception as e:
-        error_msg = f"Error during merge: {str(e)}\nTraceback: {traceback.format_exc()}"
-        debug_print(error_msg)
+        debug_print(f"Error during column matching: {str(e)}\nTraceback: {traceback.format_exc()}")
+        print(json.dumps({
+            'success': False,
+            'message': str(e),
+            'traceback': traceback.format_exc()
+        }))
+        sys.exit(1)
+
+def merge_files_with_column_matches(file_paths, column_matches, output_file="merged_output.csv"):
+    """Merge files into a single CSV based on column_matches."""
+    try:
+        if len(file_paths) < 2:
+            raise ValueError("At least two files are required for merging")
+        
+        # Read all files into DataFrames
+        dataframes = [read_file(file) for file in file_paths]
+
+        # Create a combined DataFrame with merged columns
+        merged_df = pd.DataFrame()
+
+        for source_column, target_column in column_matches.items():
+            # Collect data from matching columns
+            col_data = []
+            for df in dataframes:
+                if source_column in df.columns:
+                    col_data.append(df[source_column])
+                if target_column in df.columns:
+                    col_data.append(df[target_column])
+            # Combine all data for the column pair
+            merged_df[target_column] = pd.concat(col_data, ignore_index=True)
+
+        # Add unmatched columns to the merged DataFrame
+        for df in dataframes:
+            for col in df.columns:
+                if col not in column_matches.keys() and col not in column_matches.values():
+                    if col not in merged_df.columns:
+                        merged_df[col] = df[col]
+
+        # Save the merged DataFrame to a CSV file
+        merged_df.to_csv(output_file, index=False)
+        debug_print(f"Merged data saved to {output_file}")
+
+        print(json.dumps({
+            'success': True,
+            'message': ' Merging Files',
+            'output_file': output_file
+        }))
+        sys.exit(0)
+
+    except Exception as e:
+        debug_print(f"Error during file merging: {str(e)}\nTraceback: {traceback.format_exc()}")
         print(json.dumps({
             'success': False,
             'message': str(e),
@@ -108,8 +157,8 @@ def merge_files(file_paths, output_path='merged_data.csv'):
 
 if __name__ == "__main__":
     debug_print(f"Script started with arguments: {sys.argv}")
-    
     if len(sys.argv) < 2:
+        debug_print("No file paths provided.")
         print(json.dumps({
             'success': False,
             'message': 'No file paths provided'
@@ -117,15 +166,17 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        file_paths = json.loads(sys.argv[1])
+        # Print the raw argument for debugging
+        debug_print(f"Raw input for file paths: {sys.argv[1]}")
+        file_paths = json.loads(sys.argv[1])  # Parse file paths
         debug_print(f"Parsed file paths: {file_paths}")
         merge_files(file_paths)
     except Exception as e:
-        error_msg = f"Error in main: {str(e)}\nTraceback: {traceback.format_exc()}"
-        debug_print(error_msg)
+        debug_print(f"Error in main: {str(e)}\nTraceback: {traceback.format_exc()}")
         print(json.dumps({
             'success': False,
             'message': str(e),
             'traceback': traceback.format_exc()
         }))
         sys.exit(1)
+
