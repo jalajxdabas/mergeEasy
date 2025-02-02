@@ -4,9 +4,12 @@ import sys
 import json
 import traceback
 import requests
+from dotenv import load_dotenv
 
-# Set your Hugging Face API token
-HUGGINGFACE_API_TOKEN = "YOUR TOKEN"
+load_dotenv()
+
+
+HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN");
 
 def debug_print(message):
     """Print debug information to stderr."""
